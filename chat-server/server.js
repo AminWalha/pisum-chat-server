@@ -1,15 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 app.use(cors());
 app.use(express.json());
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radiology report software used by radiologists and medical imaging professionals.
 
@@ -22,7 +20,6 @@ You help users with:
 Keep answers concise and friendly. If a question is outside PISUM's scope, politely redirect.
 Always respond in the same language the user writes in.`;
 
-// Keep conversation history per session (in-memory, resets on restart)
 const sessions = new Map();
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
@@ -38,21 +35,33 @@ app.post('/chat', async (req, res) => {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
+  if (!sessions.has(sessionId)) {
+    sessions.set(sessionId, []);
+    setTimeout(() => sessions.delete(sessionId), 30 * 60 * 1000);
+  }
+
+  const history = sessions.get(sessionId);
+  history.push({ role: 'user', parts: [{ text: message }] });
+
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
+    const response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: history,
+      }),
     });
 
-    if (!sessions.has(sessionId)) {
-      sessions.set(sessionId, model.startChat({ history: [] }));
-      // Clean up old sessions after 30 min
-      setTimeout(() => sessions.delete(sessionId), 30 * 60 * 1000);
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Gemini error:', JSON.stringify(data));
+      return res.status(500).json({ error: 'Failed to get response. Please try again.' });
     }
 
-    const chat = sessions.get(sessionId);
-    const result = await chat.sendMessage(message);
-    const reply = result.response.text();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
+    history.push({ role: 'model', parts: [{ text: reply }] });
 
     res.json({ reply });
   } catch (err) {

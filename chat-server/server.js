@@ -18,10 +18,14 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - macOS and Linux versions are in development
 
 ## PLANS & PRICING
-- **Pro**: €39/month or €29/month billed annually (€348/year) — individual radiologists
-- **Clinic**: €99/month or €74/month billed annually (€888/year) — teams up to 10 seats
-- 25% discount on annual billing
-- 14-day free trial, no credit card required
+- **Free**: €0 — 10 templates, 2 languages, PDF only, 20 reports/month, 20-min AI dictation trial
+- **Starter**: €39/mo (€31/mo annual) — 20 templates, 5 languages, 200 min dictation/month
+- **Pro**: €79/mo (€63/mo annual) — 112+ templates, 23 languages, 2,000 min dictation/month ⭐ Most popular
+- **Expert**: €129/mo (€103/mo annual) — unlimited dictation, LAN sync (1 site/3 PCs), full statistics
+- **Clinic**: €399/mo (€319/mo annual) — 5 users included, multi-site LAN sync, unlimited workstations, dedicated onboarding; extra seats €69/user
+- 20% discount on annual billing
+- 7-day free trial on all paid plans, no credit card required
+- 30-day money-back guarantee
 - Plans can be switched anytime (upgrades immediate, downgrades at next cycle)
 
 ## FEATURES

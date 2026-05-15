@@ -19,13 +19,13 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - macOS and Linux versions are in development
 
 ## PLANS & PRICING
-- **Free**: €0 — 10 templates, 2 languages, PDF only, 20 reports/month, AI Dictation 20-min trial, AI Enhancer 5-use trial
-- **Starter**: €39/mo (€31/mo annual) — 20 templates, 5 languages, PDF + Word, unlimited reports, AI Dictation 200 min/mo, AI Enhancer 50/mo, Basic Worklist
-- **Pro**: €79/mo (€63/mo annual) — 112+ templates, 23 languages, PDF + Word, unlimited reports, AI Dictation 2,000 min/mo, AI Enhancer 200/mo, Full Worklist, Basic Statistics ⭐ Most popular
-- **Expert**: €129/mo (€103/mo annual) — 112+ custom templates, 23 languages, PDF + Word, unlimited reports, AI Dictation unlimited, AI Enhancer unlimited, Advanced Worklist, Full Statistics, LAN sync (1 site · 3 PCs), Chat + email support
+- **Free**: €0 — 10 templates, 2 languages, PDF only, 50 reports/month, AI Dictation 30 min/mo, AI Enhancer 10 uses/mo
+- **Starter**: €29/mo (€23/mo annual) — 20 templates, 23 languages, PDF + Word, unlimited reports, AI Dictation 500 min/mo, AI Enhancer 50/mo, Basic Worklist
+- **Pro**: €79/mo (€63/mo annual) — 112+ templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation 2,000 min/mo, AI Enhancer 200/mo, Full Worklist, Basic Statistics ⭐ Most popular
+- **Expert**: €129/mo (€103/mo annual) — 112+ custom templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation unlimited, AI Enhancer unlimited, Advanced Worklist, Full Statistics, LAN sync (1 site · 3 PCs), Chat + email support
 - **Clinic**: €399/mo (€319/mo annual) — everything in Expert + 5 users included, multi-site LAN sync, unlimited workstations, Advanced Statistics + dedicated onboarding; extra seats €69/user
-- 20% discount on annual billing (saves: Starter €96/yr, Pro €192/yr, Expert €312/yr, Clinic €960/yr)
-- 7-day free trial on all paid plans, no credit card required
+- 20% discount on annual billing (saves: Starter €72/yr, Pro €192/yr, Expert €312/yr, Clinic €960/yr)
+- 14-day free trial on all paid plans, no credit card required
 - 30-day money-back guarantee on all paid plans
 - Plans can be switched anytime (upgrades immediate, downgrades at next cycle)
 - Payments processed by Lemon Squeezy (PCI-compliant) — PISUM never stores banking details

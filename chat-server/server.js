@@ -21,13 +21,13 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - macOS and Linux versions are in development
 
 ## PLANS & PRICING
-- **Free**: €0 — 10 templates, 2 languages, PDF only, 50 reports/month, AI Dictation 30 min/mo, AI Enhancer 10 uses/mo — free forever, no trial expiry
+- **Free**: €0 — 10 templates, 2 languages, PDF only, 50 reports/month, AI Dictation 30 min/mo, AI Enhancer 10 uses/mo, Limited Worklist — free forever, no trial expiry
 - **Starter**: €29/mo (€23/mo annual) — 20 templates, 23 languages, PDF + Word, unlimited reports, AI Dictation 500 min/mo, AI Enhancer 50/mo, Basic Worklist
-- **Pro**: €79/mo (€63/mo annual) — 112+ templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation 2,000 min/mo, AI Enhancer 200/mo, Report Translation 100/mo, Full Worklist, Basic Statistics ⭐ Most popular
-- **Expert**: €129/mo (€103/mo annual) — 112+ custom templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation unlimited, AI Enhancer unlimited, Report Translation unlimited, Advanced Worklist, Full Statistics, LAN sync (1 site · 3 PCs), Chat + email support
+- **Pro**: €79/mo (€63/mo annual) — 112+ templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation 2,000 min/mo, AI Enhancer 200/mo, Report Translation 100/mo, Full Worklist, Basic Statistics, Priority email support ⭐ Most popular
+- **Expert**: €129/mo (€103/mo annual) — 112+ custom templates, 23 languages, PDF + Word + HTML, unlimited reports, AI Dictation unlimited, AI Enhancer unlimited, Report Translation unlimited, Advanced Worklist, Full Statistics, LAN sync (1 site · 3 PCs), Chat + email support 🔥 Best Value
 - **Clinic**: €399/mo (€319/mo annual) — everything in Expert + 5 users included, multi-site LAN sync, unlimited workstations, Report Translation unlimited, Advanced Statistics, dedicated onboarding, bulk export; extra seats €69/user
 - 20% discount on annual billing (saves: Starter €72/yr, Pro €192/yr, Expert €312/yr, Clinic €960/yr)
-- 14-day free trial on all paid plans, no credit card required
+- 14-day free trial on Starter, Pro, and Expert plans, no credit card required
 - 30-day money-back guarantee on all paid plans
 - Plans can be switched anytime (upgrades immediate, downgrades at next cycle)
 - Payments processed by Lemon Squeezy (PCI-compliant) — PISUM never stores banking details
@@ -61,7 +61,7 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - AI features (Sally AI, AI Enhancer, Report Translation) connect to a secure cloud API; no audio or report content is ever stored
 - Account data only (name, email, subscription status) stored on EU Supabase servers
 - GDPR / RGPD compliant
-- DPO contact: MyPisum@Proton.me
+- DPO contact: support@pisum.app
 
 ## MEDICAL DISCLAIMER
 - PISUM is a drafting aid — the radiologist retains full medical responsibility
@@ -69,7 +69,7 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - AI reduces report writing time by 60–80%; average report time under 60 seconds
 
 ## SUPPORT & CONTACT
-- Email: MyPisum@Proton.me
+- Email: support@pisum.app
 - Response time: within 24 hours (bug reports within 48 hours)
 - Languages: English, French, German, Spanish
 - Website: pisum.app
@@ -79,7 +79,7 @@ const SYSTEM_PROMPT = `You are a helpful assistant for PISUM, an AI-powered radi
 - Governed by French law, Paris courts jurisdiction
 - License: personal, non-transferable, professional use only
 
-Always respond in the same language the user writes in. If unsure about a detail, direct to pisum.app or MyPisum@Proton.me.`;
+Always respond in the same language the user writes in. If unsure about a detail, direct to pisum.app or support@pisum.app.`;
 
 const sessions = new Map();
 

@@ -23,7 +23,7 @@ const FALLBACK_PAGES = ['/', '/documentation.html', '/contact.html', '/rgpd.html
 // Defense in depth: never pass along a sentence that would reveal how the AI works internally.
 // Generic technical terms are listed here; vendor names come from a private list
 // (Render Secret File confidential-terms.txt or the CONFIDENTIAL_TERMS variable).
-const GENERIC_TERMS = ['endpoint', 'endpoints', 'websocket', 'websockets', 'stream', 'streams', 'streamed', 'streaming', 'after each pause', 'sentence by sentence'];
+const GENERIC_TERMS = ['endpoint', 'endpoints', 'websocket', 'websockets', 'stream', 'streams', 'streamed', 'streaming'];
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const CONFIDENTIAL_TERMS = [...GENERIC_TERMS, ...readList('CONFIDENTIAL_TERMS', 'confidential-terms.txt')];
 const CONFIDENTIAL = new RegExp('\\b(' + CONFIDENTIAL_TERMS.map(escapeRe).join('|') + ')\\b', 'i');

@@ -1,7 +1,6 @@
 // Live knowledge for the assistant. Every refresh it re-reads:
-//   - the whole website: home page + sitemap, then every internal link (new pages are found automatically),
-//   - plans and prices from the pricing page,
-//   - the FAQ,
+//   - the whole website, as visitors see it: home page + sitemap, then every internal link
+//     (new pages are found automatically, whatever their layout),
 //   - the software version and changelog from the same version.json the desktop app uses.
 // Default refresh: every 5 minutes.
 // Nothing has to be updated here when the website or the software changes.
@@ -12,11 +11,12 @@ const SITE_URL = (process.env.SITE_URL || 'https://pisum.app').replace(/\/$/, ''
 const VERSION_URL = process.env.VERSION_URL || 'https://raw.githubusercontent.com/AminWalha/Pisum/refs/heads/main/version.json';
 const REFRESH_MS = Math.max(5, Number(process.env.KNOWLEDGE_REFRESH_MINUTES) || 5) * 60 * 1000;
 const FETCH_TIMEOUT = 10000;
-const PAGE_BUDGET = Number(process.env.KNOWLEDGE_PAGE_CHARS) || 7000;
-const MAX_BLOCK_LENGTH = Number(process.env.KNOWLEDGE_MAX_CHARS) || 80000;
+const PAGE_BUDGET = Number(process.env.KNOWLEDGE_PAGE_CHARS) || 15000;
+const MAX_BLOCK_LENGTH = Number(process.env.KNOWLEDGE_MAX_CHARS) || 120000;
 const MAX_PAGES = Number(process.env.KNOWLEDGE_MAX_PAGES) || 40;
-// Pages without useful public content, or handled by a dedicated parser below
-const EXCLUDED_PAGES = (process.env.KNOWLEDGE_EXCLUDE || 'auth.html,dashboard.html,faq.html,pricing.html')
+// Pages without public content (sign-in, customer dashboard). Every other page is read as plain text,
+// so the assistant keeps working whatever the page layout becomes.
+const EXCLUDED_PAGES = (process.env.KNOWLEDGE_EXCLUDE || 'auth.html,dashboard.html')
   .split(',').map((s) => s.trim()).filter(Boolean);
 const FALLBACK_PAGES = ['/', '/documentation.html', '/contact.html', '/rgpd.html', '/terms.html', '/mentions-legales.html', '/dpia.html', '/dpo.html'];
 
@@ -116,10 +116,30 @@ function internalLinks(html, fromPath) {
   return [...out];
 }
 
+// The site fills its text from translations/en.json at load time (data-i18n attributes).
+// Apply the same English texts here, so the assistant reads exactly what visitors see.
+function lookup(dict, key) {
+  return key.split('.').reduce((o, k) => (o && typeof o === 'object' ? o[k] : undefined), dict);
+}
+
+function applyTranslations(html, dict) {
+  if (!dict) return html;
+  return html.replace(/(<(\w+)\b[^>]*\sdata-i18n="([^"[][^"]*)"[^>]*>)([\s\S]*?)(<\/\2>)/g, (m, open, tag, key, inner, close) => {
+    const value = lookup(dict, key);
+    return typeof value === 'string' ? open + value + close : m;
+  });
+}
+
 // Crawls the whole website: starts from the home page and the sitemap, then follows internal links.
 async function loadPages() {
   const queue = ['/', ...(await sitemapPages())];
   const seen = new Set();
+  const dictionaries = new Map(); // one translations/en.json per folder
+  const dictionaryFor = (p) => {
+    const dir = p.replace(/[^/]*$/, '');
+    if (!dictionaries.has(dir)) dictionaries.set(dir, get(`${dir}translations/en.json`, true).catch(() => null));
+    return dictionaries.get(dir);
+  };
   const pages = [];
   while (queue.length && seen.size < MAX_PAGES) {
     const batch = [];
@@ -128,12 +148,12 @@ async function loadPages() {
       if (!seen.has(p) && !batch.includes(p) && !isExcluded(p)) batch.push(p);
     }
     batch.forEach((p) => seen.add(p));
-    const results = await Promise.allSettled(batch.map(async (p) => ({ p, html: await get(p) })));
+    const results = await Promise.allSettled(batch.map(async (p) => ({ p, html: await get(p), dict: await dictionaryFor(p) })));
     for (const r of results) {
       if (r.status !== 'fulfilled') continue;
-      const { p, html } = r.value;
+      const { p, html, dict } = r.value;
       internalLinks(html, p).forEach((l) => { if (!seen.has(l)) queue.push(l); });
-      const { title, text } = pageContent(html);
+      const { title, text } = pageContent(applyTranslations(html, dict));
       if (text) pages.push({ p, title, text });
     }
   }
@@ -142,57 +162,6 @@ async function loadPages() {
     const body = text.length > PAGE_BUDGET ? text.slice(0, PAGE_BUDGET).replace(/\s\S*$/, '') + ' …' : text;
     return `#### ${title || p} (${SITE_URL}${p})\n${body}`;
   }).join('\n\n');
-}
-
-async function loadPricing() {
-  const [page, tr] = await Promise.all([
-    get('/saas/frontend/pricing.html'),
-    get('/saas/frontend/translations/en.json', true),
-  ]);
-  const prices = { free: { monthly: 0, annual: 0 } };
-  for (const m of page.matchAll(/id="price-(\w+)"[^>]*data-monthly="(\d+)"[^>]*data-annual="(\d+)"/g)) {
-    prices[m[1]] = { monthly: Number(m[2]), annual: Number(m[3]) };
-  }
-  const p = tr.pricing || {};
-  const lines = [];
-  for (const [id, plan] of Object.entries(p.plans || {})) {
-    if (!plan || typeof plan !== 'object') continue;
-    const price = prices[id];
-    const features = Object.keys(plan)
-      .filter((k) => /^f\d+$/.test(k))
-      .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
-      .map((k) => safe(plan[k]))
-      .filter(Boolean);
-    let head = `- ${safe(plan.name || id)}`;
-    if (price) {
-      head += ` — €${price.monthly}/month`;
-      if (price.annual && price.annual !== price.monthly) head += ` (€${price.annual}/month billed annually)`;
-    }
-    const extras = [plan.subtitle, plan.trial, plan.microcopy].map(safe).filter(Boolean).join('. ');
-    lines.push(`${head}. ${extras ? extras + '. ' : ''}Includes: ${features.join('; ')}.`);
-  }
-  if (p.clinic && p.clinic.users) lines.push(`- Clinic seats: ${safe(p.clinic.users)}.`);
-  if (p.guarantee) lines.push(`- ${safe(p.guarantee)}.`);
-
-  const faq = [];
-  const f = p.faq || {};
-  for (let i = 1; f[`q${i}`]; i++) {
-    const q = safe(f[`q${i}`]);
-    const a = safe(f[`a${i}`]);
-    if (q && a) faq.push(`Q: ${q}\nA: ${a}`);
-  }
-  return { plans: lines.join('\n'), faq: faq.join('\n\n') };
-}
-
-async function loadFaq() {
-  const html = await get('/faq.html');
-  const out = [];
-  for (const m of html.matchAll(/<span class="acc-q-text">([\s\S]*?)<\/span>[\s\S]*?<div class="acc-body-inner">([\s\S]*?)<\/div>/g)) {
-    const q = safe(m[1]);
-    const a = safe(m[2]);
-    if (q && a) out.push(`Q: ${q}\nA: ${a}`);
-  }
-  return out.join('\n\n');
 }
 
 async function loadVersion() {
@@ -205,15 +174,12 @@ async function loadVersion() {
 }
 
 async function refresh() {
-  const results = await Promise.allSettled([loadVersion(), loadPricing(), loadFaq(), loadPages()]);
-  const [version, pricing, faq, pages] = results.map((r) => (r.status === 'fulfilled' ? r.value : null));
+  const results = await Promise.allSettled([loadVersion(), loadPages()]);
+  const [version, pages] = results.map((r) => (r.status === 'fulfilled' ? r.value : null));
   const failed = results.filter((r) => r.status === 'rejected').map((r) => r.reason && r.reason.message);
 
   const parts = [];
   if (version) parts.push(`### Current software version\n${version}`);
-  if (pricing && pricing.plans) parts.push(`### Plans and prices\n${pricing.plans}`);
-  if (pricing && pricing.faq) parts.push(`### Pricing FAQ\n${pricing.faq}`);
-  if (faq) parts.push(`### Website FAQ\n${faq}`);
   if (pages) parts.push(`### Website pages\n${pages}`);
 
   if (parts.length) {
@@ -262,6 +228,5 @@ module.exports = {
   refresh,
   redactReply,
   getBlock: () => block,
-  hasPricing: () => block.includes('### Plans and prices'),
   status: () => ({ fetchedAt: fetchedAt && fetchedAt.toISOString(), chars: block.length, pages: pagesRead, error: lastError }),
 };

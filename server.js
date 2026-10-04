@@ -23,7 +23,7 @@ function jsonEnv(name, fallback) {
 // Model defaults are used when unset, which keeps the server compatible with new model versions.
 const AI_GENERATION_CONFIG = jsonEnv('AI_GENERATION_CONFIG_JSON', {});
 // Sent when the output filter removed the whole reply
-const PROPRIETARY_REPLY = 'These technical details are proprietary. AI processing takes place in the European Union, audio is not stored by PISUM and user data is not used to train models. For more information: support@pisum.app';
+const PROPRIETARY_REPLY = 'These technical details are proprietary. Our data protection information is available at [pisum.app/rgpd.html](https://pisum.app/rgpd.html).';
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY_LENGTH = 20;
@@ -58,12 +58,10 @@ app.use('/chat', limiter);
 const DEFAULT_PROMPT = `You are the assistant of the pisum.app website. Help visitors understand PISUM, a structured radiology reporting software, using only the LIVE WEBSITE DATA below.
 - Do not discuss technical implementation, vendors or internal architecture; say these details are proprietary.
 - Do not give medical advice. Never ask for or repeat patient data.
-- If you do not know, point to support@pisum.app or pisum.app/contact.html.
+- If you do not know, point to the contact page pisum.app/contact.html.
 - Answer in the visitor's language, concisely.`;
 
 const SYSTEM_PROMPT = readSecret('SYSTEM_PROMPT', 'system-prompt.txt').trim() || DEFAULT_PROMPT;
-// Fallback plan list, used only if the live website data cannot be read
-const STATIC_PRICING = readSecret('STATIC_PRICING', 'static-pricing.txt').trim();
 if (SYSTEM_PROMPT === DEFAULT_PROMPT) console.warn('Private system prompt not found: using the default prompt.');
 const LANG_NAMES = {
   en: 'English', fr: 'French', da: 'Danish', de: 'German', el: 'Greek', es: 'Spanish', hi: 'Hindi', id: 'Indonesian',
@@ -118,7 +116,7 @@ app.post('/chat', async (req, res) => {
   // On a cold start, give the first live-data load a few seconds before answering
   await Promise.race([knowledge.ready, new Promise((r) => setTimeout(r, 4000))]);
   const live = knowledge.getBlock();
-  const systemText = [SYSTEM_PROMPT, knowledge.hasPricing() ? '' : STATIC_PRICING, live].filter(Boolean).join('\n\n') + context;
+  const systemText = [SYSTEM_PROMPT, live].filter(Boolean).join('\n\n') + context;
 
   const session = getSession(sessionId);
   session.history.push({ role: 'user', parts: [{ text }] });

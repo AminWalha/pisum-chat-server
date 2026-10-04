@@ -96,7 +96,7 @@ app.post('/chat', async (req, res) => {
     return res.status(403).json({ error: 'Forbidden', code: 'origin' });
   }
 
-  const { message, sessionId, lang, page } = req.body || {};
+  const { message, sessionId, lang, page, name } = req.body || {};
   const text = typeof message === 'string' ? message.trim() : '';
 
   if (!text || typeof sessionId !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(sessionId)) {
@@ -111,7 +111,13 @@ app.post('/chat', async (req, res) => {
 
   const langName = LANG_NAMES[typeof lang === 'string' ? lang.slice(0, 2).toLowerCase() : ''] || 'English';
   const pageName = typeof page === 'string' ? page.replace(/[^\w.\-]/g, '').slice(0, 60) : '';
-  const context = `\n\n## CONTEXT\nThe visitor is on the page "${pageName || 'index.html'}" with the site language set to ${langName}.`;
+  // First name of a signed-in visitor (sent by the website widget only when logged in).
+  // One word of letters, apostrophes or hyphens only, so it cannot carry instructions.
+  const firstName = typeof name === 'string' ? name.normalize('NFC').replace(/[^\p{L}\p{M}' -]/gu, ' ').trim().split(/\s+/)[0].slice(0, 30) : '';
+  const visitor = firstName
+    ? ` The visitor is signed in to their PISUM account; their first name is ${firstName}. Address them by their first name naturally (for example in a greeting), without overdoing it, and never ask for other personal details.`
+    : ' The visitor is not signed in.';
+  const context = `\n\n## CONTEXT\nThe visitor is on the page "${pageName || 'index.html'}" with the site language set to ${langName}.${visitor}`;
 
   // On a cold start, give the first live-data load a few seconds before answering
   await Promise.race([knowledge.ready, new Promise((r) => setTimeout(r, 4000))]);

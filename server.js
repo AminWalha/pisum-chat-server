@@ -114,9 +114,14 @@ app.post('/chat', async (req, res) => {
   // First name of a signed-in visitor (sent by the website widget only when logged in).
   // One word of letters, apostrophes or hyphens only, so it cannot carry instructions.
   const firstName = typeof name === 'string' ? name.normalize('NFC').replace(/[^\p{L}\p{M}' -]/gu, ' ').trim().split(/\s+/)[0].slice(0, 30) : '';
-  const visitor = firstName
-    ? ` The visitor is signed in to their PISUM account; their first name is ${firstName}. Address them by their first name naturally (for example in a greeting), without overdoing it, and never ask for other personal details.`
+  const session = getSession(sessionId);
+  const firstTurn = session.history.length === 0;
+  let visitor = firstName
+    ? ` The visitor is signed in to their PISUM account; their first name is ${firstName}. Never ask for other personal details.`
     : ' The visitor is not signed in.';
+  visitor += firstTurn
+    ? (firstName ? ` This is the start of the conversation: greet them once, by their first name.` : '')
+    : ' The conversation is already under way: do not greet again and do not start the reply with their name; answer directly.';
   const context = `\n\n## CONTEXT\nThe visitor is on the page "${pageName || 'index.html'}" with the site language set to ${langName}.${visitor}`;
 
   // On a cold start, give the first live-data load a few seconds before answering
@@ -124,7 +129,6 @@ app.post('/chat', async (req, res) => {
   const live = knowledge.getBlock();
   const systemText = [SYSTEM_PROMPT, live].filter(Boolean).join('\n\n') + context;
 
-  const session = getSession(sessionId);
   session.history.push({ role: 'user', parts: [{ text }] });
 
   // Trim from the front, keeping the first turn a 'user' turn (required by the API)
